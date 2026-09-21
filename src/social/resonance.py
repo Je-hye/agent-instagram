@@ -6,7 +6,7 @@ def interest_overlap(a: Agent, b: Agent) -> float:
     if not shared:
         return 0.0
     score = sum(min(a.interests[k], b.interests[k]) for k in shared)
-    max_possible = sum(sorted(a.interests.values(), reverse=True)[:len(shared)])
+    max_possible = sum(max(a.interests[k], b.interests[k]) for k in shared)
     return score / max_possible if max_possible > 0 else 0.0
 
 

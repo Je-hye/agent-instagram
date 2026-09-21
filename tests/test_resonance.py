@@ -54,3 +54,9 @@ def test_like_threshold_extrovert_lower():
 def test_comment_threshold_higher_than_like():
     agent = _make_agent({}, energy=0.5)
     assert comment_threshold(agent) > like_threshold(agent)
+
+
+def test_interest_overlap_symmetric():
+    a = _make_agent({"사진": 0.8, "음식": 0.5})
+    b = _make_agent({"사진": 0.7, "여행": 0.4})
+    assert interest_overlap(a, b) == pytest.approx(interest_overlap(b, a), abs=0.01)
