@@ -1,6 +1,4 @@
 import pytest
-import tempfile
-import os
 from src.db.schema import init_db
 
 
