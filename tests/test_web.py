@@ -127,7 +127,7 @@ def test_partial_posts_returns_html(client):
 def test_main_web_help():
     result = subprocess.run(
         [sys.executable, "main.py", "web", "--help"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, check=False,
         cwd="/Users/User/src/repos/agent-instagram/.claude/worktrees/phase4-web-dashboard",
     )
     assert result.returncode == 0
@@ -137,7 +137,7 @@ def test_main_web_help():
 def test_main_simulate_help():
     result = subprocess.run(
         [sys.executable, "main.py", "simulate", "--help"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, check=False,
         cwd="/Users/User/src/repos/agent-instagram/.claude/worktrees/phase4-web-dashboard",
     )
     assert result.returncode == 0

@@ -1,0 +1,4 @@
+[lint]
+ignore = [
+    "BLE001",  # broad exception catch is intentional in API/bridge error handling
+]

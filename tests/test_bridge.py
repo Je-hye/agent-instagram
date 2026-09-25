@@ -33,7 +33,7 @@ def db_with_posts(tmp_path):
 
 
 def test_bridge_tick_scores_unscored_posts(db_with_posts):
-    db_path, agent, posts = db_with_posts
+    db_path, agent, _posts = db_with_posts
     mock_ac = MagicMock()
     mock_ac.messages.create.return_value.content[0].text = json.dumps(
         {"caption_naturalness": 0.5, "persona_consistency": 0.5, "image_caption_alignment": 0.5}
@@ -45,7 +45,7 @@ def test_bridge_tick_scores_unscored_posts(db_with_posts):
 
 
 def test_bridge_tick_publishes_above_threshold(db_with_posts):
-    db_path, agent, posts = db_with_posts
+    db_path, _agent, _posts = db_with_posts
     mock_ac = MagicMock()
     mock_ac.messages.create.return_value.content[0].text = json.dumps(
         {"caption_naturalness": 0.9, "persona_consistency": 0.9, "image_caption_alignment": 0.9}
@@ -65,7 +65,7 @@ def test_bridge_tick_publishes_above_threshold(db_with_posts):
 
 
 def test_bridge_tick_skips_below_threshold(db_with_posts):
-    db_path, agent, posts = db_with_posts
+    db_path, _agent, _posts = db_with_posts
     mock_ac = MagicMock()
     mock_ac.messages.create.return_value.content[0].text = json.dumps(
         {"caption_naturalness": 0.2, "persona_consistency": 0.2, "image_caption_alignment": 0.2}
@@ -107,7 +107,7 @@ def test_bridge_tick_appends_ai_agent_marker_if_missing(tmp_path):
 
 
 def test_bridge_tick_no_ig_client_skips_publish(db_with_posts):
-    db_path, agent, posts = db_with_posts
+    db_path, agent, _posts = db_with_posts
     mock_ac = MagicMock()
     mock_ac.messages.create.return_value.content[0].text = json.dumps(
         {"caption_naturalness": 0.9, "persona_consistency": 0.9, "image_caption_alignment": 0.9}
