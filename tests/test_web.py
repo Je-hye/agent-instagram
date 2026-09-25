@@ -98,12 +98,39 @@ def test_posts_limit_capped_at_500(tmp_path):
     assert len(resp.json()) == 10
 
 
-def test_index_returns_html(client):
+def test_explore_returns_html(client):
     c, _ = client
     resp = c.get("/")
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
     assert "agent-instagram" in resp.text
+
+
+def test_dashboard_returns_html(client):
+    c, _ = client
+    resp = c.get("/dashboard")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    assert "agent-instagram" in resp.text
+
+
+def test_profile_returns_html(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    from src.agents.factory import create_random_agent
+    from src.db.repository import AgentRepo
+    agent = create_random_agent()
+    AgentRepo(db_path).save(agent)
+    c = TestClient(create_app(db_path))
+    resp = c.get(f"/agents/{agent.id}")
+    assert resp.status_code == 200
+    assert agent.name in resp.text
+
+
+def test_profile_404_unknown_agent(client):
+    c, _ = client
+    resp = c.get("/agents/nonexistent-id")
+    assert resp.status_code == 404
 
 
 def test_partial_stats_returns_html(client):

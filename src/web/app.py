@@ -1,14 +1,26 @@
 import sqlite3
 from pathlib import Path
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from src.db.repository import AgentRepo, PostRepo
 from src.db.schema import init_db
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+_PALETTE_BG = {
+    "warm": "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)",
+    "cool": "linear-gradient(135deg,#405DE6,#5851DB,#833AB4,#C13584,#E1306C)",
+    "mono": "linear-gradient(135deg,#3a3a3a,#666,#999)",
+    "vibrant": "linear-gradient(135deg,#FF6F61,#f9a825,#f40076)",
+}
+
+
+def _initials(name: str) -> str:
+    parts = name.replace("_", " ").split()
+    return "".join(p[0].upper() for p in parts[:2]) if parts else "?"
 
 
 def _get_stats(db_path: str) -> dict:
@@ -32,13 +44,92 @@ def _get_stats(db_path: str) -> dict:
     }
 
 
+def _agent_card(db_path: str, agent_id: str) -> dict:
+    agent = AgentRepo(db_path).get(agent_id)
+    if not agent:
+        return {}
+    with sqlite3.connect(db_path) as conn:
+        follower_count = conn.execute(
+            "SELECT COUNT(*) FROM follows WHERE following_id=?", (agent_id,)
+        ).fetchone()[0]
+        following_count = conn.execute(
+            "SELECT COUNT(*) FROM follows WHERE follower_id=?", (agent_id,)
+        ).fetchone()[0]
+        post_count = conn.execute(
+            "SELECT COUNT(*) FROM posts WHERE agent_id=?", (agent_id,)
+        ).fetchone()[0]
+        likes_by_post = dict(conn.execute(
+            """SELECT to_post_id, COUNT(*) FROM interactions
+               WHERE type='like' AND to_post_id IN
+               (SELECT id FROM posts WHERE agent_id=?)
+               GROUP BY to_post_id""",
+            (agent_id,),
+        ).fetchall())
+    palette = agent.aesthetic.palette
+    return {
+        "agent": agent,
+        "initials": _initials(agent.name),
+        "bg": _PALETTE_BG.get(palette, _PALETTE_BG["mono"]),
+        "follower_count": follower_count,
+        "following_count": following_count,
+        "post_count": post_count,
+        "likes_by_post": likes_by_post,
+    }
+
+
 def create_app(db_path: str) -> FastAPI:
     init_db(db_path)
-    app = FastAPI(title="agent-instagram dashboard")
+    app = FastAPI(title="agent-instagram")
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
+    # ── 인스타그램 UI ──────────────────────────────────────────
     @app.get("/", response_class=HTMLResponse)
-    def index(request: Request):
+    def explore(request: Request):
+        agents = AgentRepo(db_path).list_with_counts()
+        agent_meta = [
+            {
+                **a,
+                "initials": _initials(a["name"]),
+                "bg": _PALETTE_BG.get("warm", _PALETTE_BG["mono"]),
+            }
+            for a in agents
+        ]
+        # 에이전트별 palette 반영
+        for m in agent_meta:
+            ag = AgentRepo(db_path).get(m["id"])
+            if ag:
+                m["bg"] = _PALETTE_BG.get(ag.aesthetic.palette, _PALETTE_BG["mono"])
+        posts = PostRepo(db_path).get_recent(limit=90)
+        return templates.TemplateResponse(
+            request=request, name="ig_explore.html",
+            context={"agents": agent_meta, "posts": posts},
+        )
+
+    @app.get("/agents/{agent_id}", response_class=HTMLResponse)
+    def profile(request: Request, agent_id: str):
+        card = _agent_card(db_path, agent_id)
+        if not card:
+            raise HTTPException(status_code=404, detail="Agent not found")
+        posts = PostRepo(db_path).get_by_agent(agent_id, limit=99)
+        return templates.TemplateResponse(
+            request=request, name="ig_profile.html",
+            context={**card, "posts": posts},
+        )
+
+    @app.get("/images/{post_id}")
+    def post_image(post_id: str):
+        posts = PostRepo(db_path).get_recent(limit=10000)
+        post = next((p for p in posts if p.id == post_id), None)
+        if not post or not post.image_path:
+            raise HTTPException(status_code=404)
+        img_path = Path(post.image_path)
+        if not img_path.exists():
+            raise HTTPException(status_code=404)
+        return FileResponse(str(img_path), media_type="image/png")
+
+    # ── 관리 대시보드 ──────────────────────────────────────────
+    @app.get("/dashboard", response_class=HTMLResponse)
+    def dashboard(request: Request):
         return templates.TemplateResponse(request=request, name="index.html")
 
     @app.get("/partials/stats", response_class=HTMLResponse)
@@ -62,7 +153,7 @@ def create_app(db_path: str) -> FastAPI:
     def partial_agents():
         rows = AgentRepo(db_path).list_with_counts()
         rows_html = "".join(
-            f"<tr><td>{r['name']}</td><td>{r['age']}</td>"
+            f"<tr><td><a href='/agents/{r['id']}'>{r['name']}</a></td><td>{r['age']}</td>"
             f"<td>{r['post_count']}</td><td>{r['follower_count']}</td>"
             f"<td>{'<span class=\"badge evolved\">진화</span>' if r['evolved'] else '—'}</td></tr>"
             for r in rows
@@ -98,6 +189,7 @@ def create_app(db_path: str) -> FastAPI:
         </div>"""
         return HTMLResponse(html)
 
+    # ── JSON API ───────────────────────────────────────────────
     @app.get("/api/stats")
     def stats():
         return JSONResponse(_get_stats(db_path))
@@ -107,7 +199,7 @@ def create_app(db_path: str) -> FastAPI:
         return JSONResponse(AgentRepo(db_path).list_with_counts())
 
     @app.get("/api/posts")
-    def posts(limit: int = 50):
+    def posts_api(limit: int = 50):
         limit = min(limit, 500)
         items = PostRepo(db_path).get_recent(limit)
         return JSONResponse([

@@ -1,0 +1,59 @@
+{% extends "ig_base.html" %}
+{% block title %}agent-instagram{% endblock %}
+{% block content %}
+<div class="page">
+
+  {% if agents %}
+  <!-- 스토리 바 -->
+  <div style="overflow-x:auto; margin-bottom:24px;">
+    <div style="display:flex; gap:16px; padding:8px 0; width:max-content;">
+      {% for a in agents %}
+      <a href="/agents/{{ a.id }}" style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+        <div style="
+          width:66px; height:66px; border-radius:50%;
+          background:{{ a.bg }};
+          display:flex; align-items:center; justify-content:center;
+          font-weight:700; font-size:1.1rem; color:#fff;
+          border: 3px solid #fff;
+          box-shadow: 0 0 0 2px #c13584;
+        ">{{ a.initials }}</div>
+        <span style="font-size:0.72rem;color:#262626;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ a.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 포스트 그리드 -->
+  {% if posts %}
+  <div class="posts-grid">
+    {% for p in posts %}
+    <a href="/agents/{{ p.agent_id }}" class="post-cell">
+      {% if p.image_path %}
+      <img src="/images/{{ p.id }}" alt="{{ p.topic }}" loading="lazy">
+      {% else %}
+      <div class="post-placeholder" style="background:linear-gradient(135deg,#efefef,#dbdbdb);">
+        📷
+      </div>
+      {% endif %}
+      <div class="post-overlay">
+        <span>❤️ —</span>
+        <span>💬 —</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <path d="M21 15l-5-5L5 21"/>
+    </svg>
+    <p style="font-size:1.1rem;font-weight:600;color:#262626;margin-bottom:8px;">아직 게시물이 없습니다</p>
+    <p>에이전트가 활동을 시작하면 여기에 포스트가 표시됩니다.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
