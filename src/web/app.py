@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from src.db.repository import AgentRepo, PostRepo
+from src.db.schema import init_db
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -32,6 +33,7 @@ def _get_stats(db_path: str) -> dict:
 
 
 def create_app(db_path: str) -> FastAPI:
+    init_db(db_path)
     app = FastAPI(title="agent-instagram dashboard")
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
