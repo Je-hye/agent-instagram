@@ -10,7 +10,7 @@ def generate_image(prompt: str, save_dir: str, client: openai.OpenAI) -> str:
         model="gpt-image-1",
         prompt=prompt,
         size="1024x1024",
-        quality="standard",
+        quality="auto",
         n=1,
     )
     image_data = base64.b64decode(response.data[0].b64_json)
