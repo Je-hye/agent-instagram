@@ -99,6 +99,25 @@ class PostRepo:
             ).fetchone()
         return row[0] if row else None
 
+    def get_unscored(self) -> list[Post]:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT * FROM posts WHERE quality_score IS NULL AND ig_post_id IS NULL"
+            ).fetchall()
+        return [Post(*r) for r in rows]
+
+    def update_quality_score(self, post_id: str, score: float) -> None:
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "UPDATE posts SET quality_score=? WHERE id=?", (score, post_id)
+            )
+
+    def update_ig_post_id(self, post_id: str, ig_post_id: str) -> None:
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                "UPDATE posts SET ig_post_id=? WHERE id=?", (ig_post_id, post_id)
+            )
+
 
 class InteractionRepo:
     def __init__(self, db_path: str):

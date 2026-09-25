@@ -53,3 +53,21 @@ def test_follow_repo(tmp_db):
     assert b.id in follow_repo.get_following(a.id)
     follow_repo.unfollow(a.id, b.id)
     assert not follow_repo.is_following(a.id, b.id)
+
+
+def test_post_repo_unscored(tmp_db):
+    agent = create_random_agent()
+    AgentRepo(tmp_db).save(agent)
+    post = Post(
+        id=str(uuid.uuid4()), agent_id=agent.id, topic="art",
+        caption="hello", image_path=None, ig_post_id=None,
+        quality_score=None, created_at=datetime.now(timezone.utc).isoformat(),
+    )
+    repo = PostRepo(tmp_db)
+    repo.save(post)
+    assert len(repo.get_unscored()) == 1
+    repo.update_quality_score(post.id, 0.85)
+    assert repo.get_unscored() == []
+    repo.update_ig_post_id(post.id, "ig123")
+    fetched = repo.get_by_agent(agent.id)
+    assert fetched[0].ig_post_id == "ig123"
