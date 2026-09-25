@@ -10,6 +10,8 @@ from src.agents.factory import create_random_agent
 from src.agents.wake import run_wake_cycle
 from src.db.repository import AgentRepo, FollowRepo
 from src.db.schema import init_db
+from src.instagram.bridge import run_bridge_tick
+from src.instagram.client import InstagramClient
 
 
 def _setup_agents(n: int, db_path: str) -> None:
@@ -42,6 +44,14 @@ def run_simulation(
     ac = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     oc = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
+    ig_user_id = os.environ.get("IG_USER_ID")
+    ig_access_token = os.environ.get("IG_ACCESS_TOKEN")
+    ig_client = (
+        InstagramClient(ig_user_id=ig_user_id, access_token=ig_access_token)
+        if ig_user_id and ig_access_token
+        else None
+    )
+
     def tick():
         agent_repo = AgentRepo(db_path)
         agents = agent_repo.list_all()
@@ -52,8 +62,14 @@ def run_simulation(
             if fresh and check_evolution(fresh):
                 evolve_agent(fresh, db_path, ac)
 
+    def bridge_tick():
+        n = run_bridge_tick(db_path, ac, ig_client)
+        if n:
+            print(f"[bridge] Instagram 게시: {n}건")
+
     scheduler = BlockingScheduler()
     scheduler.add_job(tick, "interval", seconds=interval_seconds, id="tick")
+    scheduler.add_job(bridge_tick, "interval", seconds=interval_seconds * 2, id="bridge")
     print(f"시뮬레이션 시작: {n_agents}명 에이전트, {interval_seconds}초 간격")
     tick()
     scheduler.start()
