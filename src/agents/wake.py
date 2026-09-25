@@ -7,15 +7,11 @@ import anthropic
 import openai
 
 from src.content.pipeline import create_post
-from src.db.repository import (
-    AgentRepo, InteractionRepo, FollowRepo, PostRepo
-)
+from src.db.repository import AgentRepo, FollowRepo, InteractionRepo, PostRepo
 from src.events.bus import EventBus
 from src.models import Agent
 from src.social.feed import get_feed
-from src.social.resonance import (
-    resonance_score, like_threshold, comment_threshold
-)
+from src.social.resonance import comment_threshold, like_threshold, resonance_score
 
 _UNFOLLOW_THRESHOLD = 0.1
 _UNFOLLOW_CHECK_COUNT = 20

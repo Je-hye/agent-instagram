@@ -1,4 +1,4 @@
-from src.events.bus import EventBus, Event
+from src.events.bus import EventBus
 
 
 def test_publish_returns_event_id(tmp_db):

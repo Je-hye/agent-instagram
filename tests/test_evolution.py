@@ -1,7 +1,8 @@
-from unittest.mock import MagicMock
-from src.agents.factory import create_random_agent
-from src.agents.evolution import check_evolution, evolve_agent
 import json
+from unittest.mock import MagicMock
+
+from src.agents.evolution import check_evolution, evolve_agent
+from src.agents.factory import create_random_agent
 
 
 def test_check_evolution_false_when_low_influence():

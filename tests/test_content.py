@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+
 from src.agents.factory import create_random_agent
 from src.content.caption import generate_caption, generate_image_prompt
 from src.content.image import generate_image
@@ -42,8 +43,8 @@ def test_generate_image_saves_file(tmp_path):
 
 
 def test_create_post_saves_to_db(tmp_db, tmp_path):
-    from src.db.repository import AgentRepo, PostRepo
     from src.agents.factory import create_random_agent
+    from src.db.repository import AgentRepo, PostRepo
     agent = create_random_agent()
     AgentRepo(tmp_db).save(agent)
 

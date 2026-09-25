@@ -1,10 +1,11 @@
 import sqlite3
-from src.db.schema import init_db
-from src.agents.factory import create_random_agent
-from src.db.repository import AgentRepo, PostRepo, FollowRepo
-from src.models import Post
 import uuid
 from datetime import datetime, timezone
+
+from src.agents.factory import create_random_agent
+from src.db.repository import AgentRepo, FollowRepo, PostRepo
+from src.db.schema import init_db
+from src.models import Post
 
 
 def test_init_db_creates_all_tables(tmp_path):

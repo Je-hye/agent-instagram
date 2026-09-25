@@ -1,7 +1,8 @@
 import random
 import uuid
 from datetime import datetime, timezone
-from src.models import Agent, Personality, Aesthetic
+
+from src.models import Aesthetic, Agent, Personality
 
 INTEREST_POOL = ["사진", "음식", "여행", "음악", "독서", "예술", "패션", "자연", "기술", "운동"]
 CAPTION_STYLES = ["verbose", "concise", "poetic", "dry", "emoji-heavy"]

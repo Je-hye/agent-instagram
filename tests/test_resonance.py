@@ -1,8 +1,12 @@
 import pytest
-from src.models import Agent, Personality, Aesthetic
+
+from src.models import Aesthetic, Agent, Personality
 from src.social.resonance import (
-    interest_overlap, aesthetic_compat, personality_compat,
-    resonance_score, like_threshold, comment_threshold,
+    aesthetic_compat,
+    comment_threshold,
+    interest_overlap,
+    like_threshold,
+    resonance_score,
 )
 
 

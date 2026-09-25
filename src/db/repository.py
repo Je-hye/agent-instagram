@@ -1,7 +1,8 @@
 import json
 import sqlite3
 from datetime import datetime, timezone
-from src.models import Agent, Personality, Aesthetic, Post
+
+from src.models import Aesthetic, Agent, Personality, Post
 
 
 def _agent_from_row(row) -> Agent:
