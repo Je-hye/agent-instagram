@@ -12,6 +12,7 @@ RUN mkdir -p data images
 
 ENV PYTHONPATH=/app
 ENV DB_PATH=/data/simulation.db
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
