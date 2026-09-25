@@ -1,6 +1,9 @@
 import subprocess
 import sys
 import uuid
+from pathlib import Path
+
+_REPO_ROOT = str(Path(__file__).parent.parent)
 from datetime import datetime, timezone
 
 import pytest
@@ -128,7 +131,7 @@ def test_main_web_help():
     result = subprocess.run(
         [sys.executable, "main.py", "web", "--help"],
         capture_output=True, text=True, check=False,
-        cwd="/Users/User/src/repos/agent-instagram/.claude/worktrees/phase4-web-dashboard",
+        cwd=_REPO_ROOT,
     )
     assert result.returncode == 0
     assert "--port" in result.stdout
@@ -138,7 +141,7 @@ def test_main_simulate_help():
     result = subprocess.run(
         [sys.executable, "main.py", "simulate", "--help"],
         capture_output=True, text=True, check=False,
-        cwd="/Users/User/src/repos/agent-instagram/.claude/worktrees/phase4-web-dashboard",
+        cwd=_REPO_ROOT,
     )
     assert result.returncode == 0
     assert "--agents" in result.stdout
