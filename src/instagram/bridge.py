@@ -28,7 +28,8 @@ def run_bridge_tick(
         try:
             uploader = CloudinaryUploader()
             image_url = uploader.upload(post.image_path)
-            ig_post_id = ig_client.post(image_url=image_url, caption=post.caption)
+            caption = post.caption if "🤖 AI agent" in post.caption else f"{post.caption} 🤖 AI agent"
+            ig_post_id = ig_client.post(image_url=image_url, caption=caption)
             post_repo.update_ig_post_id(post.id, ig_post_id)
             published += 1
         except Exception as e:
