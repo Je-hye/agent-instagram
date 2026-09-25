@@ -1,0 +1,30 @@
+app = "je-hye-agent-instagram"
+primary_region = "nrt"
+
+[build]
+
+[env]
+  PORT = "8000"
+  DB_PATH = "/data/simulation.db"
+
+[mounts]
+  source = "agent_instagram_data"
+  destination = "/data"
+
+[processes]
+  web = "python main.py web --port 8000 --db /data/simulation.db"
+  worker = "python main.py simulate --agents 5 --interval 300 --db /data/simulation.db"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["web"]
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+  processes = ["web", "worker"]

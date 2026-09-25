@@ -1,8 +1,10 @@
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
 import pytest
+
 from src.content.quality import generate_quality_score
-from src.models import Agent, Personality, Aesthetic, Post
+from src.models import Aesthetic, Agent, Personality, Post
 
 
 @pytest.fixture

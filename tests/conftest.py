@@ -1,4 +1,5 @@
 import pytest
+
 from src.db.schema import init_db
 
 

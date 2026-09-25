@@ -1,8 +1,5 @@
-import pytest
-from unittest.mock import MagicMock, patch
-from src.agents.wake import should_post
 from src.agents.factory import create_random_agent
-from src.models import Agent
+from src.agents.wake import should_post
 
 
 def test_should_post_none_last_time():
@@ -23,7 +20,8 @@ def test_should_post_just_posted_low_freq():
 def test_should_post_long_ago_high_freq():
     agent = create_random_agent()
     agent.post_freq = 3.0
-    from datetime import datetime, timezone, timedelta
-    old = (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat()
+    from datetime import datetime, timedelta, timezone
+    # 365일 전: prob = 1 - exp(-0.125 * 8760) ≈ 1.0, 확률적 실패 없음
+    old = (datetime.now(timezone.utc) - timedelta(days=365)).isoformat()
     results = [should_post(agent, old) for _ in range(20)]
-    assert all(results)  # 오래됐으면 항상 True
+    assert all(results)

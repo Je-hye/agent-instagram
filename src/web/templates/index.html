@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>agent-instagram dashboard</h1>
+
+<div id="stats-section"
+     hx-get="/partials/stats"
+     hx-trigger="load, every 10s"
+     hx-swap="outerHTML">
+  <p>로딩 중...</p>
+</div>
+
+<div id="agents-section"
+     hx-get="/partials/agents"
+     hx-trigger="load, every 10s"
+     hx-swap="outerHTML">
+</div>
+
+<div id="posts-section"
+     hx-get="/partials/posts"
+     hx-trigger="load, every 10s"
+     hx-swap="outerHTML">
+</div>
+{% endblock %}

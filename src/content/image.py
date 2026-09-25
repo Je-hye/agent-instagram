@@ -1,7 +1,8 @@
 import uuid
+from pathlib import Path
+
 import httpx
 import openai
-from pathlib import Path
 
 
 def generate_image(prompt: str, save_dir: str, client: openai.OpenAI) -> str:

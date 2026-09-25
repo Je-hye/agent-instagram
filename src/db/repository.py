@@ -1,7 +1,8 @@
 import json
 import sqlite3
 from datetime import datetime, timezone
-from src.models import Agent, Personality, Aesthetic, Post
+
+from src.models import Aesthetic, Agent, Personality, Post
 
 
 def _agent_from_row(row) -> Agent:
@@ -44,6 +45,32 @@ class AgentRepo:
         with sqlite3.connect(self.db_path) as conn:
             rows = conn.execute("SELECT * FROM agents").fetchall()
         return [_agent_from_row(r) for r in rows]
+
+    def list_with_counts(self) -> list[dict]:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT a.id, a.name, a.age, a.evolved_at,
+                       COUNT(DISTINCT p.id) AS post_count,
+                       COUNT(DISTINCT f.follower_id) AS follower_count
+                FROM agents a
+                LEFT JOIN posts p ON p.agent_id = a.id
+                LEFT JOIN follows f ON f.following_id = a.id
+                GROUP BY a.id
+                ORDER BY a.name
+                """
+            ).fetchall()
+        return [
+            {
+                "id": r[0],
+                "name": r[1],
+                "age": r[2],
+                "evolved": r[3] is not None,
+                "post_count": r[4],
+                "follower_count": r[5],
+            }
+            for r in rows
+        ]
 
     def update_influence(self, agent_id: str, from_id: str, delta: float) -> None:
         agent = self.get(agent_id)
@@ -98,6 +125,14 @@ class PostRepo:
                 (agent_id,),
             ).fetchone()
         return row[0] if row else None
+
+    def get_recent(self, limit: int = 50) -> list[Post]:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT * FROM posts ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [Post(*r) for r in rows]
 
     def get_unscored(self) -> list[Post]:
         with sqlite3.connect(self.db_path) as conn:
