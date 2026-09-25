@@ -71,3 +71,53 @@ def test_post_repo_unscored(tmp_db):
     repo.update_ig_post_id(post.id, "ig123")
     fetched = repo.get_by_agent(agent.id)
     assert fetched[0].ig_post_id == "ig123"
+
+
+def test_get_recent_posts_returns_limit(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    agent = create_random_agent()
+    AgentRepo(db_path).save(agent)
+    repo = PostRepo(db_path)
+    for i in range(10):
+        repo.save(Post(
+            id=str(uuid.uuid4()), agent_id=agent.id, topic="t",
+            caption=f"c{i}", image_path=None, ig_post_id=None,
+            quality_score=None, created_at=datetime.now(timezone.utc).isoformat(),
+        ))
+    assert len(repo.get_recent(limit=5)) == 5
+
+
+def test_get_recent_posts_default_limit(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    agent = create_random_agent()
+    AgentRepo(db_path).save(agent)
+    repo = PostRepo(db_path)
+    for i in range(60):
+        repo.save(Post(
+            id=str(uuid.uuid4()), agent_id=agent.id, topic="t",
+            caption=f"c{i}", image_path=None, ig_post_id=None,
+            quality_score=None, created_at=datetime.now(timezone.utc).isoformat(),
+        ))
+    assert len(repo.get_recent()) == 50
+
+
+def test_agent_repo_list_with_counts(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    a1 = create_random_agent()
+    a2 = create_random_agent()
+    AgentRepo(db_path).save(a1)
+    AgentRepo(db_path).save(a2)
+    FollowRepo(db_path).follow(a2.id, a1.id)
+    PostRepo(db_path).save(Post(
+        id=str(uuid.uuid4()), agent_id=a1.id, topic="t",
+        caption="c", image_path=None, ig_post_id=None,
+        quality_score=None, created_at=datetime.now(timezone.utc).isoformat(),
+    ))
+    rows = AgentRepo(db_path).list_with_counts()
+    target = next(r for r in rows if r["id"] == a1.id)
+    assert target["post_count"] == 1
+    assert target["follower_count"] == 1
+    assert isinstance(target["evolved"], bool)
