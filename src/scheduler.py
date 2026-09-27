@@ -1,5 +1,6 @@
 import os
 import random
+from pathlib import Path
 
 import anthropic
 import openai
@@ -12,6 +13,10 @@ from src.db.repository import AgentRepo, FollowRepo
 from src.db.schema import init_db
 from src.instagram.bridge import run_bridge_tick
 from src.instagram.client import InstagramClient
+
+
+def pause_file_path(db_path: str) -> Path:
+    return Path(db_path).parent / "PAUSED"
 
 
 def _setup_agents(n: int, db_path: str) -> None:
@@ -53,7 +58,12 @@ def run_simulation(
         else None
     )
 
+    _pause_file = pause_file_path(db_path)
+
     def tick():
+        if _pause_file.exists():
+            print(f"[tick] 일시정지 상태. /api/simulation/resume 으로 재개하세요.")
+            return
         agent_repo = AgentRepo(db_path)
         agents = agent_repo.list_all()
         random.shuffle(agents)
@@ -68,6 +78,8 @@ def run_simulation(
         if n:
             print(f"[bridge] Instagram 게시: {n}건")
 
+    if _pause_file.exists():
+        print(f"시뮬레이션 일시정지 상태입니다. /api/simulation/resume 으로 재개하세요.")
     print(f"시뮬레이션 시작: {n_agents}명 에이전트, {interval_seconds}초 간격"
           + (f", 최대 {max_ticks}틱" if max_ticks else ""))
     tick()
