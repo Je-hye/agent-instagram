@@ -213,7 +213,7 @@ def create_app(db_path: str) -> FastAPI:
     def simulation_resume():
         if not _pause_file.exists():
             return JSONResponse({"status": "already_running"})
-        _pause_file.unlink()
+        _pause_file.unlink(missing_ok=True)
         return JSONResponse({"status": "running"})
 
     @app.get("/api/agents")
