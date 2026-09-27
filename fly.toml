@@ -11,20 +11,14 @@ primary_region = "nrt"
   source = "agent_instagram_data"
   destination = "/data"
 
-[processes]
-  web = "python main.py web --port 8000 --db /data/simulation.db"
-  worker = "python main.py simulate --agents 5 --interval 300 --db /data/simulation.db"
-
 [http_service]
   internal_port = 8000
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = "suspend"
   auto_start_machines = true
-  min_machines_running = 0
-  processes = ["web"]
+  min_machines_running = 1
 
 [[vm]]
-  memory = "256mb"
+  memory = "512mb"
   cpu_kind = "shared"
   cpus = 1
-  processes = ["web", "worker"]
