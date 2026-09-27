@@ -9,7 +9,7 @@ def generate_image(prompt: str, save_dir: str, client: openai.OpenAI) -> str:
     response = client.images.generate(
         model="gpt-image-1",
         prompt=prompt,
-        size="1024x1024",
+        size="512x512",
         quality="auto",
         n=1,
     )

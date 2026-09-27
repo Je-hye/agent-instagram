@@ -7,12 +7,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ src/
 COPY main.py .
+COPY entrypoint.sh .
 
-RUN mkdir -p data images
+RUN chmod +x entrypoint.sh && mkdir -p data images
 
 ENV PYTHONPATH=/app
 ENV DB_PATH=/data/simulation.db
+ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-CMD ["python", "main.py", "web", "--port", "8000", "--db", "/data/simulation.db"]
+CMD ["./entrypoint.sh"]

@@ -13,6 +13,7 @@ def _simulate(args):
         db_path=args.db,
         image_dir=args.images,
         interval_seconds=args.interval,
+        max_ticks=args.max_ticks,
     )
 
 
@@ -32,6 +33,8 @@ def main():
     sim.add_argument("--db", default=os.environ.get("DB_PATH", "data/simulation.db"))
     sim.add_argument("--images", default=os.environ.get("IMAGE_DIR", "images"))
     sim.add_argument("--interval", type=int, default=300)
+    sim.add_argument("--max-ticks", type=int, default=None, dest="max_ticks",
+                     help="최대 tick 횟수 (미지정 시 무제한)")
 
     web = subparsers.add_parser("web", help="웹 대시보드 실행")
     web.add_argument("--port", type=int, default=8000)
