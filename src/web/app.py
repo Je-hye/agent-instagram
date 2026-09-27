@@ -80,6 +80,7 @@ def _agent_card(db_path: str, agent_id: str) -> dict:
 def create_app(db_path: str) -> FastAPI:
     init_db(db_path)
     app = FastAPI(title="agent-instagram")
+    _pause_file = Path(db_path).parent / "PAUSED"
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 
     # ── 인스타그램 UI ──────────────────────────────────────────
@@ -192,7 +193,28 @@ def create_app(db_path: str) -> FastAPI:
     # ── JSON API ───────────────────────────────────────────────
     @app.get("/api/stats")
     def stats():
-        return JSONResponse(_get_stats(db_path))
+        data = _get_stats(db_path)
+        data["simulation_status"] = "paused" if _pause_file.exists() else "running"
+        return JSONResponse(data)
+
+    @app.get("/api/simulation/status")
+    def simulation_status():
+        status = "paused" if _pause_file.exists() else "running"
+        return JSONResponse({"status": status})
+
+    @app.post("/api/simulation/pause")
+    def simulation_pause():
+        if _pause_file.exists():
+            return JSONResponse({"status": "already_paused"})
+        _pause_file.touch()
+        return JSONResponse({"status": "paused"})
+
+    @app.post("/api/simulation/resume")
+    def simulation_resume():
+        if not _pause_file.exists():
+            return JSONResponse({"status": "already_running"})
+        _pause_file.unlink(missing_ok=True)
+        return JSONResponse({"status": "running"})
 
     @app.get("/api/agents")
     def agents():

@@ -172,3 +172,69 @@ def test_main_simulate_help():
     )
     assert result.returncode == 0
     assert "--agents" in result.stdout
+
+
+# ── 시뮬레이션 pause / resume / status ────────────────────────
+
+def test_simulation_status_default_running(client):
+    c, _ = client
+    resp = c.get("/api/simulation/status")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "running"}
+
+
+def test_simulation_status_in_stats(client):
+    c, _ = client
+    data = c.get("/api/stats").json()
+    assert data["simulation_status"] == "running"
+
+
+def test_simulation_pause_creates_file(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    c = TestClient(create_app(db_path))
+
+    resp = c.post("/api/simulation/pause")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "paused"}
+    assert (tmp_path / "PAUSED").exists()
+
+
+def test_simulation_pause_idempotent(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    c = TestClient(create_app(db_path))
+
+    c.post("/api/simulation/pause")
+    resp = c.post("/api/simulation/pause")
+    assert resp.json() == {"status": "already_paused"}
+
+
+def test_simulation_resume_deletes_file(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    (tmp_path / "PAUSED").touch()
+    c = TestClient(create_app(db_path))
+
+    resp = c.post("/api/simulation/resume")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "running"}
+    assert not (tmp_path / "PAUSED").exists()
+
+
+def test_simulation_resume_idempotent(client):
+    c, _ = client
+    resp = c.post("/api/simulation/resume")
+    assert resp.json() == {"status": "already_running"}
+
+
+def test_simulation_status_reflects_pause_resume(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    init_db(db_path)
+    c = TestClient(create_app(db_path))
+
+    assert c.get("/api/simulation/status").json() == {"status": "running"}
+    c.post("/api/simulation/pause")
+    assert c.get("/api/simulation/status").json() == {"status": "paused"}
+    c.post("/api/simulation/resume")
+    assert c.get("/api/simulation/status").json() == {"status": "running"}
