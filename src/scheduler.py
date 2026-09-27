@@ -37,6 +37,7 @@ def run_simulation(
     db_path: str = "data/simulation.db",
     image_dir: str = "images",
     interval_seconds: int = 300,
+    max_ticks: int | None = None,
 ) -> None:
     init_db(db_path)
     _setup_agents(n_agents, db_path)
@@ -67,9 +68,24 @@ def run_simulation(
         if n:
             print(f"[bridge] Instagram 게시: {n}건")
 
-    scheduler = BlockingScheduler()
-    scheduler.add_job(tick, "interval", seconds=interval_seconds, id="tick")
-    scheduler.add_job(bridge_tick, "interval", seconds=interval_seconds * 2, id="bridge")
-    print(f"시뮬레이션 시작: {n_agents}명 에이전트, {interval_seconds}초 간격")
+    print(f"시뮬레이션 시작: {n_agents}명 에이전트, {interval_seconds}초 간격"
+          + (f", 최대 {max_ticks}틱" if max_ticks else ""))
     tick()
+
+    if max_ticks is not None and max_ticks <= 1:
+        bridge_tick()
+        return
+
+    tick_count = [1]
+
+    def _tick_with_limit():
+        tick()
+        tick_count[0] += 1
+        if max_ticks is not None and tick_count[0] >= max_ticks:
+            bridge_tick()
+            scheduler.shutdown(wait=False)
+
+    scheduler = BlockingScheduler()
+    scheduler.add_job(_tick_with_limit, "interval", seconds=interval_seconds, id="tick")
+    scheduler.add_job(bridge_tick, "interval", seconds=interval_seconds * 2, id="bridge")
     scheduler.start()
